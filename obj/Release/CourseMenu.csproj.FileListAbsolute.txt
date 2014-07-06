@@ -1,0 +1,5 @@
+C:\websites\dnndev.me\bin\CourseMenu.dll
+C:\websites\dnndev.me\bin\CourseMenu.pdb
+C:\websites\dnndev.me\DesktopModules\CourseMenu\obj\Release\CourseMenu.csprojResolveAssemblyReference.cache
+C:\websites\dnndev.me\DesktopModules\CourseMenu\obj\Release\CourseMenu.dll
+C:\websites\dnndev.me\DesktopModules\CourseMenu\obj\Release\CourseMenu.pdb
