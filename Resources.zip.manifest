@@ -2,10 +2,6 @@
   <files>
     <file>
       <path />
-      <name>Edit.ascx</name>
-    </file>
-    <file>
-      <path />
       <name>License.txt</name>
     </file>
     <file>
@@ -15,10 +11,6 @@
     <file>
       <path />
       <name>ReleaseNotes.txt</name>
-    </file>
-    <file>
-      <path />
-      <name>Settings.ascx</name>
     </file>
     <file>
       <path />

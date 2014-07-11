@@ -41,14 +41,57 @@ namespace Plugghest.Modules.CourseMenu
     /// 
     /// </summary>
     /// -----------------------------------------------------------------------------
-    public partial class View : CourseMenuModuleBase, IActionable
+    public partial class View : PortalModuleBase, IActionable
     {
+        public string CultureCode;
+        public int CoursePluggId;
+        public CoursePluggEntity currentCPE;
+        public int CourseId;
+        public CourseContainer cc;
+        public int PluggId;
+
+
         protected void Page_Load(object sender, EventArgs e)
         {
             try
             {
-                //if (!IsPostBack)
-                //    GetMenu();
+                if (!IsPostBack)
+                {
+                    BaseHandler bh = new BaseHandler();
+                    int lastSubject;
+                    var ss = bh.GetSubjectsAsTree("en-US",out lastSubject);
+                    Subject s = ss[0];
+                    while (s != null)
+                        s = bh.NextSubject(s, lastSubject);
+
+
+                    CultureCode = (Page as DotNetNuke.Framework.PageBase).PageCulture.Name;
+                    PluggId = Convert.ToInt32(((DotNetNuke.Framework.CDefault)this.Page).Title);
+
+                    string coursePluggIdStr = Page.Request.QueryString["cp"];
+                    if (coursePluggIdStr == null)    //This is a Plugg outside a course: no menu
+                        return;
+
+                    bool isNum = int.TryParse(coursePluggIdStr, out CoursePluggId);
+                    if (!isNum)
+                        return;
+
+                    currentCPE = bh.GetCPEntity(CoursePluggId);
+                    if (currentCPE == null)
+                        return;
+                    CourseId = currentCPE.CourseId;
+                    cc = new CourseContainer(CultureCode, CourseId);
+                    if (cc == null)
+                        return;
+                    pnlTitle.Visible = true;
+                    cc.LoadPluggs();
+                    CoursePlugg currentCP = bh.FindCoursePlugg(cc.ThePluggs, currentCPE.CoursePluggId);
+
+
+
+                    PopulateTreeNodes((List<CoursePlugg>)cc.ThePluggs, TreeViewMain.Nodes);
+                }
+
             }
             catch (Exception exc) //Module failed to load
             {
@@ -56,61 +99,22 @@ namespace Plugghest.Modules.CourseMenu
             }
         }
 
-        public void GetMenu()
+        private void PopulateTreeNodes(List<CoursePlugg> cps, TreeNodeCollection RootNodes)
         {
-
-            //Todo: Fix CourseMenu now that a course can have a hierarchy of items as well as headings.
-
-            lbltest.Text = "Menu must be updated to deal with hierarchy";
-
-            string courseIdStr = Page.Request.QueryString["c"];
-            if (courseIdStr == null)    //This is a Plugg outside a course: no menu
-                return;
-
-            int courseId;
-            bool isNum = int.TryParse(courseIdStr, out courseId);
-            if (!isNum)
+            foreach (CoursePlugg cp in cps)
             {
-                lbltest.Text = "Incorrect format for URL. Format should be http://plugghest.com/12/c/6 where the first number is the PluggID and the second number is the CourseID";
-                return;
+                TreeNode NodeToAdd = new TreeNode();
+                PluggContainer p = new PluggContainer(CultureCode, cp.PluggId);
+                p.LoadTitle();
+                NodeToAdd.NavigateUrl = DotNetNuke.Common.Globals.NavigateURL(p.ThePlugg.TabId, "", "c=" + cc.ThePluggs[0].PluggId);
+                NodeToAdd.Text = p.TheTitle.Text;
+                NodeToAdd.SelectAction = TreeNodeSelectAction.Select;
+                if (cp.PluggId == PluggId)
+                    NodeToAdd.Text = "<strong>" + p.TheTitle.Text + "</strong>";
+                RootNodes.Add(NodeToAdd);
+                if (cp.children != null)
+                    PopulateTreeNodes((List<CoursePlugg>)cp.children, NodeToAdd.ChildNodes);
             }
-            //BindTree(courseId);
-            //BaseHandler bh = new BaseHandler();
-            //Course c = bh.GetCourse(courseId);
-
-            ////if course exist in the database...
-            //if (c == null)
-            //{
-            //    lbltest.Text = "There is no course with ID " + courseId;
-            //    return;
-            //}
-
-            //string pluggIdstr = DotNetNuke.Entities.Tabs.TabController.CurrentPage.Title;
-            //int pluggId = Convert.ToInt32(pluggIdstr);
-
-            //IEnumerable<CourseItem> cpExist = bh.GetCourseItems(courseId, pluggId);
-            //if (!cpExist.Any())
-            //{
-            //    lbltest.Text = "Plugg " + pluggId + " is not in course " + courseId;
-            //    return;
-            //}
-
-            //var tc = new TabController();
-            //IEnumerable<CourseItem> cps = bh.GetItemsInCourse(courseId);
-            //foreach (CourseItem cp in cps)
-            //{
-            //    Plugg p = bh.GetPlugg(cp.ItemId);
-            //    TabInfo ti = tc.GetTabByName(p.PluggId.ToString() + ": " + p.Title , PortalId);
-            //    string myUrl = DotNetNuke.Common.Globals.NavigateURL(ti.TabID, "", "", "&c=" + courseId);
-            //    Menu_Pluggs.Items.Add(new MenuItem(p.PluggId.ToString() + ": " + p.Title, "", "", myUrl));
-
-            //    if (pluggId == p.PluggId)
-            //    {
-            //        int index = cp.CIOrder - 1;
-            //        Menu_Pluggs.Items[index].Selected = true; //active order in menu
-            //    }
-            //}
-
         }
 
         public ModuleActionCollection ModuleActions
@@ -127,40 +131,5 @@ namespace Plugghest.Modules.CourseMenu
                 return actions;
             }
         }
-
-
-
-        //public void BindTree(int courseId)
-        //{
-        //    BaseHandler bh = new BaseHandler();
-        //    List<CoursePlugg> tree = (List<CoursePlugg>)bh.GetCourseItemsAsTree(courseId);
-        //    PopulateTreeNodes(tree, TreeViewMain.Nodes);
-        //}
-
-        //private void PopulateTreeNodes(List<CoursePlugg> LstCourseItem, TreeNodeCollection RootNodes)
-        //{
-        //    foreach (CoursePlugg ObjCourseItem in LstCourseItem)
-        //    {
-        //        TreeNode NodeToAdd = new TreeNode();
-        //        if (ObjCourseItem.ItemType.ToString() == ECourseItemType.Plugg.ToString())
-        //        {
-        //            BaseHandler plugghandler = new BaseHandler();
-        //            PluggContainer p = new PluggContainer();
-        //            p.ThePlugg = plugghandler.GetPlugg(ObjCourseItem.ItemId);
-        //            string curlan = (Page as PageBase).PageCulture.Name;
-        //            p.CultureCode = curlan;
-        //            p.LoadTitle();
-        //            NodeToAdd.Text = "<a  style='text-decoration: underline;cursor: pointer; ' href='/" + ObjCourseItem.ItemId + "' >" + p.TheTitle.Text + "</a>";
-        //        }
-        //        else
-        //        {
-        //            NodeToAdd.Text = Convert.ToString(ObjCourseItem.label);
-        //        }
-        //        NodeToAdd.SelectAction = TreeNodeSelectAction.None;
-        //        RootNodes.Add(NodeToAdd);
-        //        if (ObjCourseItem.children != null)
-        //            PopulateTreeNodes((List<CourseItem>)ObjCourseItem.children, NodeToAdd.ChildNodes);
-        //    }
-        //}
     }
 }
