@@ -31,13 +31,22 @@ namespace Plugghest.Modules.CourseMenu {
         protected global::System.Web.UI.WebControls.Label lblTitle;
         
         /// <summary>
-        /// lnkBeginCourse control.
+        /// hlBackToCourse control.
         /// </summary>
         /// <remarks>
         /// Auto-generated field.
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
-        protected global::System.Web.UI.WebControls.HyperLink lnkBeginCourse;
+        protected global::System.Web.UI.WebControls.HyperLink hlBackToCourse;
+        
+        /// <summary>
+        /// lnkNextPlugg control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.HyperLink lnkNextPlugg;
         
         /// <summary>
         /// TreeViewMain control.

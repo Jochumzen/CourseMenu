@@ -58,13 +58,6 @@ namespace Plugghest.Modules.CourseMenu
                 if (!IsPostBack)
                 {
                     BaseHandler bh = new BaseHandler();
-                    int lastSubject;
-                    var ss = bh.GetSubjectsAsTree("en-US",out lastSubject);
-                    Subject s = ss[0];
-                    while (s != null)
-                        s = bh.NextSubject(s, lastSubject);
-
-
                     CultureCode = (Page as DotNetNuke.Framework.PageBase).PageCulture.Name;
                     PluggId = Convert.ToInt32(((DotNetNuke.Framework.CDefault)this.Page).Title);
 
@@ -84,11 +77,20 @@ namespace Plugghest.Modules.CourseMenu
                     if (cc == null)
                         return;
                     pnlTitle.Visible = true;
+                    hlBackToCourse.NavigateUrl = DotNetNuke.Common.Globals.NavigateURL(cc.TheCourse.TabId, "", "");
                     cc.LoadPluggs();
-                    CoursePlugg currentCP = bh.FindCoursePlugg(cc.ThePluggs, currentCPE.CoursePluggId);
-
-
-
+                    CoursePlugg currentCP = bh.FindCoursePlugg(CultureCode, CourseId, CoursePluggId);
+                    CoursePlugg nextCP = bh.NextCoursePlugg(currentCP);
+                    if (nextCP != null)
+                    {
+                        PluggContainer p = new PluggContainer(CultureCode, nextCP.PluggId);
+                        lnkNextPlugg.NavigateUrl = DotNetNuke.Common.Globals.NavigateURL(p.ThePlugg.TabId, "", "cp=" + nextCP.CoursePluggId );
+                    }
+                    else
+                    {
+                        lnkNextPlugg.Enabled = false;
+                    }
+                        
                     PopulateTreeNodes((List<CoursePlugg>)cc.ThePluggs, TreeViewMain.Nodes);
                 }
 
@@ -106,10 +108,10 @@ namespace Plugghest.Modules.CourseMenu
                 TreeNode NodeToAdd = new TreeNode();
                 PluggContainer p = new PluggContainer(CultureCode, cp.PluggId);
                 p.LoadTitle();
-                NodeToAdd.NavigateUrl = DotNetNuke.Common.Globals.NavigateURL(p.ThePlugg.TabId, "", "c=" + cc.ThePluggs[0].PluggId);
+                NodeToAdd.NavigateUrl = DotNetNuke.Common.Globals.NavigateURL(p.ThePlugg.TabId, "", "cp=" + cp.CoursePluggId);
                 NodeToAdd.Text = p.TheTitle.Text;
                 NodeToAdd.SelectAction = TreeNodeSelectAction.Select;
-                if (cp.PluggId == PluggId)
+                if (cp.CoursePluggId == CoursePluggId)
                     NodeToAdd.Text = "<strong>" + p.TheTitle.Text + "</strong>";
                 RootNodes.Add(NodeToAdd);
                 if (cp.children != null)
